@@ -1,0 +1,15 @@
+version: '3'
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      context: ./back
+    ports:
+      - '8080:8080'
+  client:
+    build:
+      dockerfile: Dockerfile
+      context: ./front
+    ports:
+      - '3000:3000'
+      
