@@ -1,11 +1,26 @@
-const getFilledDifference = (bucketA, bucketB, size) => {
-  const res = bucketB.filled + bucketA.filled - size;
-  const filledX = res > 0 ? size: bucketA.filled + bucketB.filled;
+/**
+ * Combines buckets content, from bucketA to bucketB, and retuns their content based on their capacity 
+ * 
+ * @param {object} bucketA - filled value 
+ * @param {object} - filled & size values
+ * @returns {number[]} - The filled result for both buckets
+ */
+const getFilledDifference = (bucketA, { filled, size }) => {
+  const res = filled + bucketA.filled - size;
+  const filledX = res > 0 ? size : bucketA.filled + filled;
   const filledY = res > 0 ? res : 0;
 
   return [filledX, filledY];
 };
 
+/**
+ * Builds and returns the step data
+ * 
+ * @param {object} bucketA - size & filled values 
+ * @param {object} bucketB - size & filled values 
+ * @param {number} invertValueKeys - if true, will invert solution step values, to match X & Y, default false
+ * @returns {object} - caption, description and the values of bucket X & Y
+ */
 const getStep = (bucketA, bucketB, invertValueKeys = false) => {
   let caption = '';
   let description = '';
@@ -19,7 +34,7 @@ const getStep = (bucketA, bucketB, invertValueKeys = false) => {
       description = `Fill the ${bucketASize} bucket completly, to get the total of ${bucketA.size}lts`;
       break;
     case bucketA.filled === bucketA.size: {
-      const [filledA, filledB] = getFilledDifference(bucketA, bucketB, bucketB.size);
+      const [filledA, filledB] = getFilledDifference(bucketA, bucketB);
       bucketA.filled = filledB;
       bucketB.filled = filledA;
       caption = `Using the ${bucketASize} bucket to fill the ${bucketBSize} one`;
@@ -32,7 +47,7 @@ const getStep = (bucketA, bucketB, invertValueKeys = false) => {
       description = `Removing all the water from the ${bucketBSize} bucket, to make free space`;
       break;
     case bucketA.filled > 0 && bucketA.filled < bucketA.size:
-      const [filledA, filledB] = getFilledDifference(bucketA, bucketB, bucketB.size);
+      const [filledA, filledB] = getFilledDifference(bucketA, bucketB);
       bucketA.filled = filledB;
       bucketB.filled = filledA;
       caption = `Remaining of the ${bucketASize} bucket`;
@@ -47,7 +62,15 @@ const getStep = (bucketA, bucketB, invertValueKeys = false) => {
   }
 };
 
-
+/**
+ * Builds and returns the steps to solution if there is one
+ * 
+ * @param {object[]} buckets - Both of the buckets values, size & filled
+ * @param {number} expectedResult - The result to acomplish
+ * @param {boolean} invertValueKeys - if true, will invert solution step values, to match X & Y
+ * @returns {object[]} - if there is a result, returns a list of steps with its values, caption & description of the solution
+ * or a message if there is no solution
+ */
 const getSteps = (buckets, expectedResult, invertValueKeys) => {
   const steps = [];  
   let isMatch = false;
@@ -65,7 +88,25 @@ const getSteps = (buckets, expectedResult, invertValueKeys) => {
     : steps;
 };
 
-const getSolution = ({ bucketX, bucketY, expectedResult }) => {
+/**
+ * Checks if all values are provided and numberic
+ * 
+ * @param {object} payload
+ * @returns {boolean} - in case of sicrepancy returns true
+ */
+const isInvalid = (payload) => {
+  return Object.values(payload).some((value) => !value || !parseInt(value));
+};
+
+/**
+ * Recieves data values to compute the two possible solutions
+ * 
+ * @param {object} payload - Buckets size & expected result
+ * @returns {object} - solutions or error message in case of wrong values or not possible solution
+ */
+const getSolution = (payload) => {
+  if (isInvalid(payload)) return { message: 'Invalid values' };
+  const { bucketX, bucketY, expectedResult } = payload
   const buckets = {
     bucketX: { size: +bucketX, filled: 0 },
     bucketY: { size: +bucketY, filled: 0 },
